@@ -31,7 +31,7 @@ void merge2_convert_sweights(int year, uint nsubs)
   vector<TFile*> fin_sub (nsubs);
   vector<TTree*> ntuple_sub (nsubs);
   for (uint subs=0; subs<nsubs; ++subs) {
-    fin_sub[subs] = new TFile(Form("/eos/user/a/aboletti/BdToKstarMuMu/sWeightsConversion/%i_data_beforsel_%imod%i.root",year,subs,nsubs),"READ");
+    fin_sub[subs] = new TFile(Form("/eos/user/a/aboletti/BdToKstarMuMu/sWeightsConversion/%i_data_beforsel_%imod%i_v3.root",year,subs,nsubs),"READ");
     ntuple_sub[subs] = (TTree*)fin_sub[subs]->Get(Form("ntuple_%imod%i",subs,nsubs));
     ntuple_sub[subs]->SetBranchAddress("nsig_sw_pos",&nsig_sw_pos);
 

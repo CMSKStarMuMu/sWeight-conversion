@@ -6,7 +6,7 @@
 
 using namespace std;
 
-vector<double> rms(0);
+vector<double> rms2(0);
 
 vector<double> val_sw_pos(0);
 vector<bool> is_sw_mod(0);
@@ -16,7 +16,7 @@ float getDist(vector<double>* v1, vector<double>* v2)
 {
   float ret = 0;
   for (uint i=0; i<v1->size(); ++i)
-    ret += (v1->at(i)-v2->at(i))*(v1->at(i)-v2->at(i))/rms[i]/rms[i];
+    ret += (v1->at(i)-v2->at(i))*(v1->at(i)-v2->at(i))/rms2[i];
   return sqrt(ret);
 }
 
@@ -87,8 +87,8 @@ float processList(vector<uint> locmap, TTree* ntuple, vector<double>* vals, vect
 void merge_convert_sweights(int year, uint subs, uint nsubs)
 {
 
-  auto fin = new TFile(Form("/eos/user/x/xuqin/workdir/B0KstMuMu/reweight/Tree/final/XGBV5/%i/%i_data_beforsel.root",year,year),"READ");
-  // auto fin = new TFile(Form("/eos/user/a/aboletti/BdToKstarMuMu/%i_data_beforsel.root",year),"READ");
+  // auto fin = new TFile(Form("/eos/user/x/xuqin/workdir/B0KstMuMu/reweight/Tree/final/XGBV5/%i/%i_data_beforsel.root",year,year),"READ");
+  auto fin = new TFile(Form("/eos/user/a/aboletti/BdToKstarMuMu/%i_data_beforsel.root",year),"READ");
   auto ntuple = (TTree*)fin->Get("ntuple");
 
   // vector<string> vars = {"bVtxCL", "bLBS", "bLBSE" ,"bCosAlphaBS", "bDCABS","bDCABSE","kstTrk1Pt", "kstTrk2Pt","kstTrk1Eta", "kstTrk2Eta","kstTrk1DCABS","kstTrk1DCABSE","kstTrk2DCABS","kstTrk2DCABSE","mu1Pt","mu2Pt","mu1Eta","mu2Eta","sum_isopt_04"};
@@ -104,8 +104,12 @@ void merge_convert_sweights(int year, uint subs, uint nsubs)
   vector<double> xsum (vars.size(),0.);
   vector<uint> xcnt (vars.size(),0);
   
-  for (uint i=0; i<vars.size(); ++i)
+  ntuple->SetBranchStatus("*",0);
+  for (uint i=0; i<vars.size(); ++i) {
+    ntuple->SetBranchStatus(vars[i].c_str(),1);
     ntuple->SetBranchAddress(vars[i].c_str(),&vals[i]);
+  }
+  ntuple->SetBranchStatus("nsig_sw",1);
   ntuple->SetBranchAddress(var_sw.c_str(),&val_sw);
 
   TStopwatch timer;
@@ -138,10 +142,10 @@ void merge_convert_sweights(int year, uint subs, uint nsubs)
   timer.Start(true);
 
   for (uint i=0; i<vars.size(); ++i)
-    rms.push_back( x2sum[i]/xcnt[i] - xsum[i]*xsum[i]/xcnt[i]/xcnt[i] );
+    rms2.push_back( x2sum[i]/xcnt[i] - xsum[i]*xsum[i]/xcnt[i]/xcnt[i] );
 
   for (int subs=0; subs<8192; ++subs) {
-    string filename = Form("/eos/user/a/aboletti/BdToKstarMuMu/sWeightsConversion/%i_data_beforsel_o%i_v2.root",year,subs);
+    string filename = Form("/eos/user/a/aboletti/BdToKstarMuMu/sWeightsConversion/%i_data_beforsel_o%i_v3.root",year,subs);
     if ( access( filename.c_str(), F_OK ) == -1 ) continue;
     auto fin_sub = new TFile(filename.c_str(),"READ");
     if (!fin_sub) continue;	// TEMP
@@ -203,6 +207,8 @@ void merge_convert_sweights(int year, uint subs, uint nsubs)
   cout<<"Map filling time: "<<timer.RealTime()<<endl;
   timer.Start(true);
 
+  ntuple->SetBranchStatus("nsig_sw",0);
+
   for (int i=0; i<nev; ++i) {
 
     // if (i%(nev/10000)==0) cout<<i*100000/nev<<"%"<<endl;
@@ -239,7 +245,7 @@ void merge_convert_sweights(int year, uint subs, uint nsubs)
   timer.Stop();
   cout<<"Main loop time: "<<timer.RealTime()<<endl;
 
-  auto fout = new TFile(Form("/eos/user/a/aboletti/BdToKstarMuMu/sWeightsConversion/%i_data_beforsel_%imod%i.root",year,subs,nsubs),"RECREATE");
+  auto fout = new TFile(Form("/eos/user/a/aboletti/BdToKstarMuMu/sWeightsConversion/%i_data_beforsel_%imod%i_v3.root",year,subs,nsubs),"RECREATE");
   fout->cd();
   auto tout = new TTree(Form("ntuple_%imod%i",subs,nsubs),"ntuple");
   double nsig_sw_pos = 0.;

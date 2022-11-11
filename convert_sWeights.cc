@@ -6,7 +6,7 @@
 
 using namespace std;
 
-vector<double> rms(0);
+vector<double> rms2(0);
 
 vector<double> val_sw_pos(0);
 vector<bool> is_sw_mod(0);
@@ -15,7 +15,7 @@ float getDist(vector<double>* v1, vector<double>* v2)
 {
   float ret = 0;
   for (uint i=0; i<v1->size(); ++i)
-    ret += (v1->at(i)-v2->at(i))*(v1->at(i)-v2->at(i))/rms[i]/rms[i];
+    ret += (v1->at(i)-v2->at(i))*(v1->at(i)-v2->at(i))/rms2[i];
   return sqrt(ret);
 }
 
@@ -108,8 +108,12 @@ void convert_sweights(int year, int subs)
   vector<double> xsum (vars.size(),0.);
   vector<uint> xcnt (vars.size(),0);
   
-  for (uint i=0; i<vars.size(); ++i)
+  ntuple->SetBranchStatus("*",0);
+  for (uint i=0; i<vars.size(); ++i) {
+    ntuple->SetBranchStatus(vars[i].c_str(),1);
     ntuple->SetBranchAddress(vars[i].c_str(),&vals[i]);
+  }
+  ntuple->SetBranchStatus("nsig_sw",1);
   ntuple->SetBranchAddress(var_sw.c_str(),&val_sw);
 
   TStopwatch timer;
@@ -133,8 +137,8 @@ void convert_sweights(int year, int subs)
   vector<double> mean(0);
   for (uint i=0; i<vars.size(); ++i) {
     mean.push_back( xsum[i]/xcnt[i] );
-    rms.push_back( x2sum[i]/xcnt[i] - xsum[i]*xsum[i]/xcnt[i]/xcnt[i] );
-    // cout<<vars[i]<<" "<<mean[i]<<" "<<rms[i]<<" "<<xsum[i]<<" "<<x2sum[i]<<endl;
+    rms2.push_back( x2sum[i]/xcnt[i] - xsum[i]*xsum[i]/xcnt[i]/xcnt[i] );
+    // cout<<vars[i]<<" "<<mean[i]<<" "<<rms2[i]<<" "<<xsum[i]<<" "<<x2sum[i]<<endl;
   }
 
   timer.Start(true);
@@ -165,11 +169,11 @@ void convert_sweights(int year, int subs)
       // uint iVar = mapIdxVar[iMapVar];
       if (vals[iVar]>mean[iVar])
 	idx = 1<<iVar | idx;
-      // if (vals[iVar]>mean[iVar]+rms[iVar])
+      // if (vals[iVar]>mean[iVar]+rms2[iVar])
       // 	idx2 = 3<<(2*iMapVar) | idx2;
       // else if (vals[iVar]>mean[iVar])
       // 	idx2 = 2<<(2*iMapVar) | idx2;
-      // else if (vals[iVar]>mean[iVar]-rms[iVar])
+      // else if (vals[iVar]>mean[iVar]-rms2[iVar])
       // 	idx2 = 1<<(2*iMapVar) | idx2;
       // cout<<" - "<<idx2;
     }
@@ -193,12 +197,14 @@ void convert_sweights(int year, int subs)
   timer.Stop();
   cout<<"Vector and map filling time: "<<timer.RealTime()<<endl;
 
+  ntuple->SetBranchStatus("nsig_sw",0);
+
   // TStopwatch timer2, timer3, timer4;
   timer.Start(true);
 
   for (int i=0; i<nev; ++i) {
 
-    // if (i%(nev/1000)==0) cout<<i*10000/nev<<"%"<<endl;
+    // if (i%(nev/10000)==0) cout<<i*100000/nev<<"%"<<endl;
     // if (i%(nev/100000)==0) {
     //   cout<<i*1000000/nev<<"% time: "<<timer.RealTime()<<endl;
     //   timer.Start(false);
@@ -228,11 +234,11 @@ void convert_sweights(int year, int subs)
     // ulong idx2 = 0;
     // for (uint iMapVar=0; iMapVar<mapIdxVar.size(); ++iMapVar) {
     //   uint iVar = mapIdxVar[iMapVar];
-    //   if (vals[iVar]>mean[iVar]+rms[iVar])
+    //   if (vals[iVar]>mean[iVar]+rms2[iVar])
     // 	idx2 = 3<<(2*iMapVar) | idx2;
     //   else if (vals[iVar]>mean[iVar])
     // 	idx2 = 2<<(2*iMapVar) | idx2;
-    //   else if (vals[iVar]>mean[iVar]-rms[iVar])
+    //   else if (vals[iVar]>mean[iVar]-rms2[iVar])
     // 	idx2 = 1<<(2*iMapVar) | idx2;
     // }
     if (subs>-1) idx = idx/8192;
@@ -257,7 +263,7 @@ void convert_sweights(int year, int subs)
   cout<<"Main loop time: "<<timer.RealTime()<<endl;
   // cout<<"Main loop time: "<<timer.RealTime()<<" ("<<timer2.RealTime()<<" - "<<timer3.RealTime()<<" - "<<timer4.RealTime()<<")"<<endl;
 
-  auto fout = new TFile(Form("/eos/user/a/aboletti/BdToKstarMuMu/sWeightsConversion/%i_data_beforsel_o%i_v2.root",year,subs),"RECREATE");
+  auto fout = new TFile(Form("/eos/user/a/aboletti/BdToKstarMuMu/sWeightsConversion/%i_data_beforsel_o%i_v3.root",year,subs),"RECREATE");
   fout->cd();
   auto tout = new TTree(Form("ntuple_%i",subs),"ntuple");
   double nsig_sw_pos = 0.;
