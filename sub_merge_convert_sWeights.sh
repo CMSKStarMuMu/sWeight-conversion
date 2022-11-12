@@ -12,8 +12,8 @@ Executable  = run_merge_convert_sWeights.sh
 subs        = \$(ProcId)
 Arguments   = \$INT(subs) ${nsubs}
 Log         = logs_parSub/sub_\$(ClusterId).log
-Output      = logs_parSub/convert_sWeights_\$INT(subs)_${nsubs}.out
-Error       = logs_parSub/convert_sWeights_\$INT(subs)_${nsubs}.err
+Output      = logs_parSub/merge_convert_sWeights_\$INT(subs)_${nsubs}.out
+Error       = logs_parSub/merge_convert_sWeights_\$INT(subs)_${nsubs}.err
 transfer_output_files = ""
 +JobFlavour = "nextweek"
 EOF

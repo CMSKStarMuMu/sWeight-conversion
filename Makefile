@@ -7,6 +7,7 @@ ROOTCINT  := $(shell which rootcint)
 EXECUTABLE1 := convert_sWeights
 EXECUTABLE2 := merge_convert_sWeights
 EXECUTABLE3 := merge2_convert_sWeights
+EXECUTABLE4 := plot_convert_sWeights
 
 #compiling options
 DEBUGFLAGS := -O3 -Wall -std=c++11
@@ -20,6 +21,9 @@ $(EXECUTABLE2): $(EXECUTABLE2).cc
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(ROOTLIBS) $(ROOTFLAGS)
 
 $(EXECUTABLE3): $(EXECUTABLE3).cc 
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(ROOTLIBS) $(ROOTFLAGS)
+
+$(EXECUTABLE4): $(EXECUTABLE4).cc 
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(ROOTLIBS) $(ROOTFLAGS)
 
 #cleaning options
