@@ -6,16 +6,16 @@ if [ ! -d logs_parSub ]; then mkdir logs_parSub; fi
 # Creation of the submit HTCondor file
 cat << EOF > temp_sub_convert_sWeights.sub
 Executable  = run_convert_sWeights.sh
-subs        = \$(ProcId)
+subs        = \$(ProcId) * 2 + 6
 Arguments   = \$INT(subs)
 Log         = logs_parSub/sub_\$(ClusterId).log
-Output      = logs_parSub/convert_sWeights_\$INT(subs).out
-Error       = logs_parSub/convert_sWeights_\$INT(subs).err
+Output      = logs_parSub/convert_sWeights_div_\$INT(subs).out
+Error       = logs_parSub/convert_sWeights_div_\$INT(subs).err
 transfer_output_files = ""
 +JobFlavour = "nextweek"
 EOF
 
-echo 'Queue 8192'>>temp_sub_convert_sWeights.sub
+echo 'Queue 5'>>temp_sub_convert_sWeights.sub
 
 # Compilation, submission and file removal
 if make convert_sWeights

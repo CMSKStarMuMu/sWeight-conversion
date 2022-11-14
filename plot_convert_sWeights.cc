@@ -8,13 +8,13 @@
 
 using namespace std;
 
-void plot_convert_sweights(int year, int nsubs)
+void plot_convert_sweights(int year, int divi)
 {
 
   auto fin = new TFile(Form("/eos/user/a/aboletti/BdToKstarMuMu/%i_data_beforsel.root",year),"READ");
   // auto fin2 = new TFile(Form("/eos/user/a/aboletti/BdToKstarMuMu/sWeightsConversion/%i_data_beforsel_posWei_mod%i.root",year,nsubs),"READ");
   auto ntuple = (TTree*)fin->Get("ntuple");
-  ntuple->AddFriend("ntuple_posWei",Form("/eos/user/a/aboletti/BdToKstarMuMu/sWeightsConversion/%i_data_beforsel_posWei_mod%i.root",year,nsubs));
+  ntuple->AddFriend("ntuple_posWei",Form("/eos/user/a/aboletti/BdToKstarMuMu/sWeightsConversion/%i_data_beforsel_posWei_div%i.root",year,divi));
 
   // vector<string> vars = {"bVtxCL", "bLBS", "bLBSE" ,"bCosAlphaBS", "bDCABS","bDCABSE","kstTrk1Pt", "kstTrk2Pt","kstTrk1Eta", "kstTrk2Eta","kstTrk1DCABS","kstTrk1DCABSE","kstTrk2DCABS","kstTrk2DCABSE","mu1Pt","mu2Pt","mu1Eta","mu2Eta","sum_isopt_04"};
   vector<string> vars = {"bVtxCL", "bLBS", "bLBSE" ,"bCosAlphaBS", "bDCABS","bDCABSE","kstTrk1Pt", "kstTrk2Pt","kstTrk1Eta", "kstTrk2Eta","kstTrk1DCABS","kstTrk2DCABS","sum_isopt_04",
@@ -22,7 +22,7 @@ void plot_convert_sweights(int year, int nsubs)
   vector<double> vals(vars.size(),0.);
   double val_sw = 0.;
   double val_sw_pos = 0.;
-
+  Long64_t eventN = 0;
 
   vector<double> var_min(vars.size(),999.);
   vector<double> var_max(vars.size(),-999.);
@@ -41,12 +41,16 @@ void plot_convert_sweights(int year, int nsubs)
   }
   ntuple->SetBranchStatus("nsig_sw",1);
   ntuple->SetBranchStatus("nsig_sw_pos",1);
+  ntuple->SetBranchStatus("eventN",1);
   ntuple->SetBranchAddress("nsig_sw",&val_sw);
   ntuple->SetBranchAddress("nsig_sw_pos",&val_sw_pos);
+  ntuple->SetBranchAddress("eventN",&eventN);
 
   Long64_t nev = ntuple->GetEntries();
   for (int i=0; i<nev; i++) {
+    if (i%divi != 0) continue;
     ntuple->GetEntry(i);
+    if (eventN%2 != 0) continue;
     for (uint iVar=0; iVar<vars.size(); ++iVar)
       if (vals[iVar]==vals[iVar]) {
 	if (var_min[iVar]>vals[iVar]) var_min[iVar] = vals[iVar];
@@ -69,7 +73,9 @@ void plot_convert_sweights(int year, int nsubs)
   }
   
   for (int i=0; i<nev; i++) {
+    if (i%divi != 0) continue;
     ntuple->GetEntry(i);
+    if (eventN%2 != 0) continue;
     for (uint iVar=0; iVar<vars.size(); ++iVar)
       if (vals[iVar]==vals[iVar]) {
 	hori[iVar]->Fill(vals[iVar],val_sw);
@@ -84,7 +90,7 @@ void plot_convert_sweights(int year, int nsubs)
     hori[iVar]->SetMinimum(0);
     hori[iVar]->Draw();
     hpos[iVar]->Draw("same");
-    can->SaveAs(Form("plot_d/%s_dist_mod%i_v2.pdf",vars[iVar].c_str(),nsubs));
+    can->SaveAs(Form("plot_d/%s_dist_div%i.pdf",vars[iVar].c_str(),divi));
   }
 
   // for (uint i=0; i<vars.size(); ++i) {
